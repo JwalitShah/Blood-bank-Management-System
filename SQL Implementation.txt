@@ -1,0 +1,74 @@
+SQL Queries
+
+#1.Present the Recipients (first name, last name, recipient id) who need blood group A+ (Simple Queries)
+select First_name,Last_name,Recipient_id 
+from recipient
+where Recipient_blood_group='A+';
+
+#2. find out the Donors (first name,last name, Donor id) whose weight lies between 50 and 90 (Simple Queries)
+Select First_name,Last_name,donor_id
+from Donor
+where weight
+between 50 and 90;
+
+#3. Find out the number of locations, where Blood donation events are conducted in Schools (Queries with Aggregate Functions)
+select count(location) as Total_schools
+from Events
+where Event_type='School';
+
+#4. Calculate the variance in Haemoglobin level and the Iron level of samples which are deemed Good (Queries with Aggregate Functions)
+select Quality, variance(Haemoglobin_level) as Haemoglobin_level_variance, avg(Iron_level) as Average_iron_level
+from analysis
+where Quality='Good';
+
+#5. Find the Blood Bank Names and the Amount of Blood (of different blood groups) they have in stock (Queries with Group By, JOINS)
+select b.bloodbank_name,sum(s.Blood_available) as Total_quantity_available,s.Blood_group
+from Bloodbanks b Inner JOIN stocks s
+ON b.Bloodbank_id=s.Bloodbank_id
+group by Blood_group;
+
+#6. List out the recipient names, hospital names and the corresponding amount they paid to the hospital in Descending order (Queries with Order By, Multiple JOINS)
+select r.recipient_id,r.first_name,r.last_name,p.amount,h.Hospital_name
+from recipient r 
+JOIN payment p on r.recipient_id=p.recipient_id 
+JOIN hospitals h on p.payment_id=h.payment_id
+order by p.amount desc;
+
+#7. Find out the Blood samples which were collected from Universities and also list the event code (Nested Queries)
+select Blood_id,Event_code
+from blood
+where Event_code 
+IN
+(select Event_code from events 
+where event_type='University');
+
+#8. List the donors with RBC_Count>50 and WBC_Count>70 (Nested Queries)
+select First_name,Last_name,Donor_id
+from donor
+where donor_id NOT IN
+(select Donor_id from analysis where RBC_count < '50')
+and donor_id in
+(select Donor_id from analysis where WBC_count > '70');
+
+#9.  Find the details of the recipient, hospital from which he receives blood and the bloodbank which supplies to the hospital, 
+#    and has made a payment in excess of 50,000(Correlated Queries)
+select r.First_name,r.Last_name,b.bloodbank_id,h.hospital_id 
+from Bloodbanks b 
+JOIN hospitals h 
+on b.bloodbank_id=h.bloodbank_id
+JOIN recipient r
+on h.recipient_id=r.recipient_id
+where 50000 < (select amount from payment p where h.recipient_id=p.recipient_id);
+
+
+NoSQL Queries
+
+1)db.Events.aggregate([{"$group":{_id:"$Event_type",count:{$sum:1}}}])
+
+2)db.Recipient.aggregate({$sort:{Quantity_required:1}})
+
+3)db.Analysis.findOne({Quality:"Good"})
+
+4)db.Hospitals.find().limit(5)
+
+5)db.Donor.find().skip(4)
